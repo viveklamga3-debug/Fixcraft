@@ -1,0 +1,38 @@
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Bebas Neue", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+
+  --color-brand: #e8611a;
+  --color-industrial-950: #0a0a0a;
+  --color-industrial-900: #121212;
+  --color-industrial-800: #1a1a1a;
+  --color-industrial-700: #2a2a2a;
+  --color-industrial-600: #3a3a3a;
+}
+
+@layer base {
+  body {
+    @apply bg-industrial-950 text-gray-200 font-sans antialiased;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-display tracking-wider uppercase;
+  }
+}
+
+.industrial-grid {
+  background-image: radial-gradient(circle at 1px 1px, rgba(232, 97, 26, 0.05) 1px, transparent 0);
+  background-size: 40px 40px;
+}
+
+.orange-glow {
+  box-shadow: 0 0 20px rgba(232, 97, 26, 0.2);
+}
+
+.orange-glow-hover:hover {
+  box-shadow: 0 0 30px rgba(232, 97, 26, 0.4);
+}
