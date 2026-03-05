@@ -83,10 +83,14 @@ const seed = () => {
   // Diagnostic Data
   const insertDiagQ = db.prepare("INSERT INTO diagnostic_questions (id, category_id, question, step_number) VALUES (?, ?, ?, ?)");
   insertDiagQ.run("q1-electronics", "electronics", "What is the main issue with your device?", 1);
+  insertDiagQ.run("q2-electronics-screen", "electronics", "Is the display showing any image at all?", 2);
   
-  const insertDiagOpt = db.prepare("INSERT INTO diagnostic_options (id, question_id, label, result_guide_id) VALUES (?, ?, ?, ?)");
-  insertDiagOpt.run("opt1-battery", "q1-electronics", "Battery drains too fast", "iphone-battery");
-  insertDiagOpt.run("opt1-screen", "q1-electronics", "Screen is cracked", null);
+  const insertDiagOpt = db.prepare("INSERT INTO diagnostic_options (id, question_id, label, next_question_id, result_guide_id) VALUES (?, ?, ?, ?, ?)");
+  insertDiagOpt.run("opt1-battery", "q1-electronics", "Battery drains too fast", null, "iphone-battery");
+  insertDiagOpt.run("opt1-screen", "q1-electronics", "Screen is cracked", "q2-electronics-screen", null);
+  
+  insertDiagOpt.run("opt2-screen-yes", "q2-electronics-screen", "Yes, but glass is shattered", null, "iphone-battery"); // Placeholder result
+  insertDiagOpt.run("opt2-screen-no", "q2-electronics-screen", "No, it is completely black", null, null);
 };
 
 seed();
@@ -137,6 +141,14 @@ async function startServer() {
     const { category_id } = req.query;
     const question = db.prepare("SELECT * FROM diagnostic_questions WHERE category_id = ? AND step_number = 1").get(category_id);
     if (!question) return res.status(404).json({ error: "No diagnostic found for this category" });
+
+    const options = db.prepare("SELECT * FROM diagnostic_options WHERE question_id = ?").all(question.id);
+    res.json({ question, options });
+  });
+
+  app.get("/api/diagnostic/question/:id", (req, res) => {
+    const question = db.prepare("SELECT * FROM diagnostic_questions WHERE id = ?").get(req.params.id);
+    if (!question) return res.status(404).json({ error: "Question not found" });
 
     const options = db.prepare("SELECT * FROM diagnostic_options WHERE question_id = ?").all(question.id);
     res.json({ question, options });

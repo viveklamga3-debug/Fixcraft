@@ -35,13 +35,24 @@ export const DiagnosticTool: React.FC<DiagnosticToolProps> = ({ category, onClos
     }
   };
 
-  const handleOptionSelect = (option: DiagnosticOption) => {
+  const handleOptionSelect = async (option: DiagnosticOption) => {
     if (option.result_guide_id) {
       setResultGuideId(option.result_guide_id);
       setStep(3);
     } else if (option.next_question_id) {
-      // Fetch next question logic would go here
-      setStep(step + 1);
+      setLoading(true);
+      try {
+        const res = await fetch(`/api/diagnostic/question/${option.next_question_id}`);
+        const data = await res.json();
+        setCurrentQuestion(data.question);
+        setOptions(data.options);
+        setStep(step + 1);
+      } catch (err) {
+        console.error(err);
+        setStep(3);
+      } finally {
+        setLoading(false);
+      }
     } else {
       setStep(3); // No result found
     }
