@@ -30,44 +30,72 @@ export default function App() {
   }, []);
 
   const fetchCategories = async () => {
-    const res = await fetch('/api/categories');
-    const data = await res.json();
-    setCategories(data);
+    try {
+      const res = await fetch('/api/categories');
+      const data = await res.json();
+      setCategories(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error('Failed to fetch categories:', err);
+      setCategories([]);
+    }
   };
 
   const fetchFeatured = async () => {
-    const res = await fetch('/api/guides');
-    const data = await res.json();
-    setFeaturedGuides(data.slice(0, 3));
+    try {
+      const res = await fetch('/api/guides');
+      const data = await res.json();
+      setFeaturedGuides(Array.isArray(data) ? data.slice(0, 3) : []);
+    } catch (err) {
+      console.error('Failed to fetch featured guides:', err);
+      setFeaturedGuides([]);
+    }
   };
 
   const fetchGuide = async (id: string) => {
-    const res = await fetch(`/api/guides/${id}`);
-    const data = await res.json();
-    setSelectedGuide(data);
-    setView('guide');
-    window.scrollTo(0, 0);
+    try {
+      const res = await fetch(`/api/guides/${id}`);
+      if (!res.ok) throw new Error('Guide not found');
+      const data = await res.json();
+      setSelectedGuide(data);
+      setView('guide');
+      window.scrollTo(0, 0);
+    } catch (err) {
+      console.error('Failed to fetch guide:', err);
+      setView('home');
+    }
   };
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!searchQuery.trim()) return;
     
-    const res = await fetch(`/api/guides?q=${encodeURIComponent(searchQuery)}`);
-    const data = await res.json();
-    setSearchResults(data);
-    setResultsTitle(`Search Results for "${searchQuery}"`);
-    setView('results');
-    window.scrollTo(0, 0);
+    try {
+      const res = await fetch(`/api/guides?q=${encodeURIComponent(searchQuery)}`);
+      const data = await res.json();
+      setSearchResults(Array.isArray(data) ? data : []);
+      setResultsTitle(`Search Results for "${searchQuery}"`);
+      setView('results');
+      window.scrollTo(0, 0);
+    } catch (err) {
+      console.error('Search failed:', err);
+      setSearchResults([]);
+      setView('results');
+    }
   };
 
   const handleCategoryClick = async (category: Category) => {
-    const res = await fetch(`/api/guides?category=${category.id}`);
-    const data = await res.json();
-    setSearchResults(data);
-    setResultsTitle(`${category.name} Repair Guides`);
-    setView('results');
-    window.scrollTo(0, 0);
+    try {
+      const res = await fetch(`/api/guides?category=${category.id}`);
+      const data = await res.json();
+      setSearchResults(Array.isArray(data) ? data : []);
+      setResultsTitle(`${category.name} Repair Guides`);
+      setView('results');
+      window.scrollTo(0, 0);
+    } catch (err) {
+      console.error('Category fetch failed:', err);
+      setSearchResults([]);
+      setView('results');
+    }
   };
 
   return (
@@ -118,10 +146,16 @@ export default function App() {
                   Join the repair revolution. Access thousands of free, expert-verified DIY guides for everything from smartphones to sneakers.
                 </p>
                 <div className="flex flex-col sm:flex-row justify-center gap-4 px-4">
-                  <button className="bg-brand hover:bg-brand/90 text-white px-8 md:px-10 py-4 md:py-5 rounded-lg font-bold uppercase tracking-widest transition-all hover:scale-105 shadow-xl shadow-brand/20">
+                  <button 
+                    onClick={() => document.getElementById('diagnostic')?.scrollIntoView({ behavior: 'smooth' })}
+                    className="bg-brand hover:bg-brand/90 text-white px-8 md:px-10 py-4 md:py-5 rounded-lg font-bold uppercase tracking-widest transition-all hover:scale-105 shadow-xl shadow-brand/20"
+                  >
                     Start a Repair
                   </button>
-                  <button className="bg-industrial-800 hover:bg-industrial-700 text-white px-8 md:px-10 py-4 md:py-5 rounded-lg font-bold uppercase tracking-widest border border-industrial-700 transition-all">
+                  <button 
+                    onClick={() => document.getElementById('categories')?.scrollIntoView({ behavior: 'smooth' })}
+                    className="bg-industrial-800 hover:bg-industrial-700 text-white px-8 md:px-10 py-4 md:py-5 rounded-lg font-bold uppercase tracking-widest border border-industrial-700 transition-all"
+                  >
                     Browse Categories
                   </button>
                 </div>
@@ -129,7 +163,7 @@ export default function App() {
             </section>
 
             {/* Diagnostic CTA */}
-            <section className="mb-24">
+            <section id="diagnostic" className="mb-24 scroll-mt-24">
               <div className="bg-linear-to-r from-industrial-900 to-industrial-800 border border-industrial-700 rounded-3xl p-8 md:p-16 relative overflow-hidden group">
                 <div className="absolute top-0 right-0 w-1/2 h-full bg-brand/5 skew-x-12 transform translate-x-32" />
                 <div className="relative z-10 grid md:grid-cols-2 gap-12 items-center">
@@ -142,7 +176,7 @@ export default function App() {
                       Our interactive diagnostic tool helps you identify the exact issue in 3 simple steps. Just answer a few questions about your device's behavior.
                     </p>
                     <div className="flex flex-wrap gap-4">
-                      {categories.slice(0, 3).map(cat => (
+                      {(Array.isArray(categories) ? categories : []).slice(0, 3).map(cat => (
                         <button
                           key={cat.id}
                           onClick={() => setActiveDiagnostic(cat)}
@@ -181,7 +215,7 @@ export default function App() {
             </section>
 
             {/* Categories */}
-            <section className="mb-24">
+            <section id="categories" className="mb-24 scroll-mt-24">
               <div className="flex justify-between items-end mb-12">
                 <div>
                   <h2 className="text-4xl mb-2">Browse by Category</h2>
@@ -189,7 +223,7 @@ export default function App() {
                 </div>
               </div>
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
-                {categories.map((cat) => {
+                {(Array.isArray(categories) ? categories : []).map((cat) => {
                   const Icon = ICON_MAP[cat.icon] || Hammer;
                   return (
                     <motion.button
@@ -220,7 +254,7 @@ export default function App() {
                 </div>
               </div>
               <div className="grid md:grid-cols-3 gap-8">
-                {featuredGuides.map(guide => (
+                {(Array.isArray(featuredGuides) ? featuredGuides : []).map(guide => (
                   <div key={guide.id} onClick={() => fetchGuide(guide.id)} className="cursor-pointer">
                     <GuideCard guide={guide} />
                   </div>
@@ -239,9 +273,9 @@ export default function App() {
               ← Back to Home
             </button>
             <h1 className="text-5xl mb-12">{resultsTitle}</h1>
-            {searchResults.length > 0 ? (
+            {(Array.isArray(searchResults) ? searchResults : []).length > 0 ? (
               <div className="grid md:grid-cols-3 gap-8">
-                {searchResults.map(guide => (
+                {(Array.isArray(searchResults) ? searchResults : []).map(guide => (
                   <div key={guide.id} onClick={() => fetchGuide(guide.id)} className="cursor-pointer">
                     <GuideCard guide={guide} />
                   </div>

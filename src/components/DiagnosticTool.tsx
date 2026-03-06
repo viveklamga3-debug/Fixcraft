@@ -26,10 +26,15 @@ export const DiagnosticTool: React.FC<DiagnosticToolProps> = ({ category, onClos
     try {
       const res = await fetch(`/api/diagnostic/start?category_id=${category.id}`);
       const data = await res.json();
-      setCurrentQuestion(data.question);
-      setOptions(data.options);
+      if (res.ok) {
+        setCurrentQuestion(data.question);
+        setOptions(Array.isArray(data.options) ? data.options : []);
+      } else {
+        setStep(3);
+      }
     } catch (err) {
       console.error(err);
+      setStep(3);
     } finally {
       setLoading(false);
     }
@@ -44,9 +49,13 @@ export const DiagnosticTool: React.FC<DiagnosticToolProps> = ({ category, onClos
       try {
         const res = await fetch(`/api/diagnostic/question/${option.next_question_id}`);
         const data = await res.json();
-        setCurrentQuestion(data.question);
-        setOptions(data.options);
-        setStep(step + 1);
+        if (res.ok) {
+          setCurrentQuestion(data.question);
+          setOptions(Array.isArray(data.options) ? data.options : []);
+          setStep(step + 1);
+        } else {
+          setStep(3);
+        }
       } catch (err) {
         console.error(err);
         setStep(3);
@@ -149,7 +158,7 @@ export const DiagnosticTool: React.FC<DiagnosticToolProps> = ({ category, onClos
               >
                 <h3 className="text-xl sm:text-2xl mb-6 sm:text-white">{currentQuestion?.question}</h3>
                 <div className="space-y-3">
-                  {options.map((opt) => (
+                  {(Array.isArray(options) ? options : []).map((opt) => (
                     <button
                       key={opt.id}
                       onClick={() => handleOptionSelect(opt)}
